@@ -6,11 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Edit, MapPin, Home } from "lucide-react";
+import { Trash2, Edit, MapPin, Home, BookOpen, FileText, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImageGallery } from "@/components/ImageGallery";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Key {
   id: string;
@@ -173,10 +174,33 @@ const Admin = () => {
             <h1 className="text-3xl font-bold">Key Management Admin</h1>
             <p className="text-muted-foreground mt-1">Add, edit, and manage keys</p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/")}>
-            <Home className="h-4 w-4 mr-2" />
-            Back to Keys
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Docs
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate("/docs")}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Full Documentation
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  navigate("/docs");
+                  setTimeout(() => window.print(), 500);
+                }}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print Quick Reference
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="outline" onClick={() => navigate("/")}>
+              <Home className="h-4 w-4 mr-2" />
+              Back to Keys
+            </Button>
+          </div>
         </div>
 
         <Card>
