@@ -45,6 +45,11 @@ All colors MUST be HSL.
     --radius: 0.75rem;
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60% / 0.1), hsl(217 91% 70% / 0.05));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 25% 98%));
+    --shadow-elegant: 0 10px 30px -10px hsl(217 91% 60% / 0.15);
+    --shadow-hover: 0 20px 40px -15px hsl(217 91% 60% / 0.25);
   }
 
   .dark {
@@ -91,5 +96,45 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .hover-scale {
+    transition: transform 0.2s ease-out;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 }

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Key, User, MapPin } from "lucide-react";
+import { Key, User, MapPin, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookingDialog } from "./BookingDialog";
 import { ImageGallery } from "./ImageGallery";
+import { InfoButton } from "./InfoButton";
 
 interface KeyData {
   id: string;
@@ -35,15 +36,26 @@ export const KeyCard = ({ keyData, onUpdate }: KeyCardProps) => {
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-all duration-300">
+      <Card className="hover:shadow-lg hover-scale transition-all duration-300 animate-fade-in">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <Key className="h-5 w-5 text-primary" />
               <CardTitle className="text-xl">{keyData.key_number}</CardTitle>
+              <InfoButton content="Available keys can be checked out. Checked out keys can be checked back in. All actions are logged automatically." />
             </div>
             <Badge variant={isAvailable ? "success" : "warning"}>
-              {isAvailable ? "Available" : "Checked Out"}
+              {isAvailable ? (
+                <>
+                  <CheckCircle2 className="h-3 w-3" />
+                  Available
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-3 w-3" />
+                  Checked Out
+                </>
+              )}
             </Badge>
           </div>
           <CardDescription className="line-clamp-2">{keyData.description}</CardDescription>
@@ -85,7 +97,7 @@ export const KeyCard = ({ keyData, onUpdate }: KeyCardProps) => {
             {isAvailable ? (
               <Button
                 onClick={() => handleBooking("check_out")}
-                className="flex-1"
+                className="flex-1 hover-scale"
                 size="sm"
               >
                 <User className="h-4 w-4 mr-1" />
@@ -95,7 +107,7 @@ export const KeyCard = ({ keyData, onUpdate }: KeyCardProps) => {
               <Button
                 onClick={() => handleBooking("check_in")}
                 variant="outline"
-                className="flex-1"
+                className="flex-1 hover-scale"
                 size="sm"
               >
                 Check In

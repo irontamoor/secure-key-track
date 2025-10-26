@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Clock, Key, User, Search, FileText, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { InfoButton } from "./InfoButton";
 
 interface Booking {
   id: string;
@@ -100,7 +101,10 @@ export const AuditLog = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle>Recent Activity</CardTitle>
+          <InfoButton content="Search across all transactions - filter by person names, key numbers, or notes. All check-ins and check-outs are logged here." />
+        </div>
         <CardDescription>Complete audit trail of all key transactions</CardDescription>
         
         <div className="relative mt-4">
@@ -109,7 +113,7 @@ export const AuditLog = () => {
             placeholder="Search by person, key, or notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-9 focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         
@@ -129,7 +133,7 @@ export const AuditLog = () => {
             filteredBookings.map((booking) => (
               <div
                 key={booking.id}
-                className="p-3 rounded-lg border bg-card hover:bg-accent/5 transition-colors space-y-2"
+                className="p-3 rounded-lg border bg-card hover:bg-accent/5 transition-all duration-200 space-y-2 animate-slide-in hover-scale"
               >
                 <div className="flex items-start gap-3">
                   <Badge variant={booking.action === "check_out" ? "warning" : "success"}>

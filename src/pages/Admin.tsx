@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImageGallery } from "@/components/ImageGallery";
+import { InfoButton } from "@/components/InfoButton";
 
 interface Key {
   id: string;
@@ -167,23 +168,28 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Key Management Admin</h1>
-            <p className="text-muted-foreground mt-1">Add, edit, and manage keys</p>
+          <div className="flex items-center gap-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Key Management Admin</h1>
+              <p className="text-muted-foreground mt-1">Add, edit, and manage keys</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate("/")}>
+            <Button variant="outline" onClick={() => navigate("/")} className="hover-scale">
               <Home className="h-4 w-4 mr-2" />
               Back to Keys
             </Button>
           </div>
         </div>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>{editingKey ? "Edit Key" : "Add New Key"}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>{editingKey ? "Edit Key" : "Add New Key"}</CardTitle>
+              <InfoButton content="Fill in key details. Key number is required and must be unique. Keywords help with searching. Upload photos for easier identification." />
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -252,16 +258,22 @@ const Admin = () => {
                 />
               </div>
 
-              <ImageUpload
-                keyId={editingKey?.id || "temp"}
-                existingImages={formData.image_urls}
-                onImagesChange={(images) =>
-                  setFormData({ ...formData, image_urls: images })
-                }
-              />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Label>Key Images</Label>
+                  <InfoButton content="Upload photos of the key for easier identification. Supports multiple images. Images are stored securely." />
+                </div>
+                <ImageUpload
+                  keyId={editingKey?.id || "temp"}
+                  existingImages={formData.image_urls}
+                  onImagesChange={(images) =>
+                    setFormData({ ...formData, image_urls: images })
+                  }
+                />
+              </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={isSubmitting} className="flex-1">
+              <div className="flex gap-2 pt-2">
+                <Button type="submit" disabled={isSubmitting} className="flex-1 hover-scale">
                   {isSubmitting
                     ? "Saving..."
                     : editingKey
@@ -273,6 +285,7 @@ const Admin = () => {
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
+                    className="hover-scale"
                   >
                     Cancel
                   </Button>
@@ -282,9 +295,12 @@ const Admin = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Existing Keys ({keys.length})</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Existing Keys ({keys.length})</CardTitle>
+              <InfoButton content="All keys in the system. Click Edit to modify or Delete to remove. Status shows if a key is currently checked out." />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -296,7 +312,7 @@ const Admin = () => {
                 keys.map((key) => (
                   <div
                     key={key.id}
-                    className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/5 transition-colors"
+                    className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/5 transition-all duration-200 animate-slide-in hover-scale"
                   >
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -337,6 +353,7 @@ const Admin = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(key)}
+                        className="hover-scale"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -344,6 +361,7 @@ const Admin = () => {
                         variant="destructive"
                         size="sm"
                         onClick={() => handleDelete(key.id, key.key_number)}
+                        className="hover-scale"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
