@@ -11,7 +11,9 @@ interface Key {
   description: string;
   keywords: string[];
   status: string;
-  keyboard_shortcut: string | null;
+  location?: string | null;
+  additional_notes?: string | null;
+  image_urls?: string[] | null;
 }
 
 export const KeySearch = () => {

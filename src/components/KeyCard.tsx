@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Key, User } from "lucide-react";
+import { Key, User, MapPin } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookingDialog } from "./BookingDialog";
+import { ImageGallery } from "./ImageGallery";
 
 interface KeyData {
   id: string;
@@ -11,7 +12,9 @@ interface KeyData {
   description: string;
   keywords: string[];
   status: string;
-  keyboard_shortcut: string | null;
+  location?: string | null;
+  additional_notes?: string | null;
+  image_urls?: string[] | null;
 }
 
 interface KeyCardProps {
@@ -46,6 +49,17 @@ export const KeyCard = ({ keyData, onUpdate }: KeyCardProps) => {
           <CardDescription className="line-clamp-2">{keyData.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
+          {keyData.location && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="h-3 w-3" />
+              <span>{keyData.location}</span>
+            </div>
+          )}
+
+          {keyData.image_urls && keyData.image_urls.length > 0 && (
+            <ImageGallery images={keyData.image_urls} />
+          )}
+
           {keyData.keywords && keyData.keywords.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {keyData.keywords.slice(0, 3).map((keyword, idx) => (
@@ -61,9 +75,9 @@ export const KeyCard = ({ keyData, onUpdate }: KeyCardProps) => {
             </div>
           )}
           
-          {keyData.keyboard_shortcut && (
-            <div className="text-xs text-muted-foreground">
-              Shortcut: <kbd className="px-1.5 py-0.5 bg-muted rounded">{keyData.keyboard_shortcut}</kbd>
+          {keyData.additional_notes && (
+            <div className="text-xs p-2 bg-muted/50 rounded">
+              <span className="font-medium">Notes:</span> {keyData.additional_notes}
             </div>
           )}
 

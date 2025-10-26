@@ -1,32 +1,48 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, Home } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Trash2, Edit, MapPin, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { ImageUpload } from "@/components/ImageUpload";
+import { ImageGallery } from "@/components/ImageGallery";
 
 interface Key {
   id: string;
   key_number: string;
   description: string;
   keywords: string[];
-  keyboard_shortcut: string | null;
   status: string;
+  location?: string | null;
+  additional_notes?: string | null;
+  image_urls?: string[] | null;
+}
+
+interface FormData {
+  key_number: string;
+  description: string;
+  keywords: string;
+  location: string;
+  additional_notes: string;
+  image_urls: string[];
 }
 
 const Admin = () => {
   const navigate = useNavigate();
   const [keys, setKeys] = useState<Key[]>([]);
-  const [formData, setFormData] = useState({
+  const [editingKey, setEditingKey] = useState<Key | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     key_number: "",
     description: "",
     keywords: "",
-    keyboard_shortcut: "",
+    location: "",
+    additional_notes: "",
+    image_urls: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,30 +75,50 @@ const Admin = () => {
         .map((k) => k.trim())
         .filter((k) => k.length > 0);
 
-      const { error } = await supabase.from("keys").insert({
+      const keyData = {
         key_number: formData.key_number,
         description: formData.description,
         keywords: keywordsArray,
-        keyboard_shortcut: formData.keyboard_shortcut || null,
-      });
+        location: formData.location || null,
+        additional_notes: formData.additional_notes || null,
+        image_urls: formData.image_urls,
+      };
 
-      if (error) throw error;
+      if (editingKey) {
+        const { error } = await supabase
+          .from("keys")
+          .update(keyData)
+          .eq("id", editingKey.id);
 
-      toast.success("Key added successfully");
+        if (error) throw error;
+        toast.success("Key updated successfully");
+        setEditingKey(null);
+      } else {
+        const { error } = await supabase.from("keys").insert([keyData]);
+
+        if (error) {
+          if (error.code === "23505") {
+            toast.error("A key with this number already exists");
+            setIsSubmitting(false);
+            return;
+          }
+          throw error;
+        }
+        toast.success("Key added successfully");
+      }
+
       setFormData({
         key_number: "",
         description: "",
         keywords: "",
-        keyboard_shortcut: "",
+        location: "",
+        additional_notes: "",
+        image_urls: [],
       });
       fetchKeys();
     } catch (error: any) {
-      if (error.code === "23505") {
-        toast.error("A key with this number already exists");
-      } else {
-        toast.error("Failed to add key");
-      }
-      console.error("Error adding key:", error);
+      toast.error(editingKey ? "Failed to update key" : "Failed to add key");
+      console.error("Error saving key:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -95,15 +131,38 @@ const Admin = () => {
 
     try {
       const { error } = await supabase.from("keys").delete().eq("id", id);
-
       if (error) throw error;
-
       toast.success("Key deleted successfully");
       fetchKeys();
     } catch (error) {
       toast.error("Failed to delete key");
       console.error("Error deleting key:", error);
     }
+  };
+
+  const handleEdit = (key: Key) => {
+    setEditingKey(key);
+    setFormData({
+      key_number: key.key_number,
+      description: key.description,
+      keywords: key.keywords?.join(", ") || "",
+      location: key.location || "",
+      additional_notes: key.additional_notes || "",
+      image_urls: key.image_urls || [],
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingKey(null);
+    setFormData({
+      key_number: "",
+      description: "",
+      keywords: "",
+      location: "",
+      additional_notes: "",
+      image_urls: [],
+    });
   };
 
   return (
@@ -122,8 +181,7 @@ const Admin = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Add New Key</CardTitle>
-            <CardDescription>Create a new key entry in the system</CardDescription>
+            <CardTitle>{editingKey ? "Edit Key" : "Add New Key"}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -142,14 +200,14 @@ const Admin = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="keyboard_shortcut">Keyboard Shortcut</Label>
+                  <Label htmlFor="location">Location</Label>
                   <Input
-                    id="keyboard_shortcut"
-                    value={formData.keyboard_shortcut}
+                    id="location"
+                    value={formData.location}
                     onChange={(e) =>
-                      setFormData({ ...formData, keyboard_shortcut: e.target.value })
+                      setFormData({ ...formData, location: e.target.value })
                     }
-                    placeholder="e.g., Ctrl+K"
+                    placeholder="e.g., Main Office, Storage Room B"
                   />
                 </div>
               </div>
@@ -179,10 +237,45 @@ const Admin = () => {
                 />
               </div>
 
-              <Button type="submit" disabled={isSubmitting}>
-                <Plus className="h-4 w-4 mr-2" />
-                {isSubmitting ? "Adding..." : "Add Key"}
-              </Button>
+              <div className="space-y-2">
+                <Label htmlFor="additional_notes">Additional Notes</Label>
+                <Textarea
+                  id="additional_notes"
+                  value={formData.additional_notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, additional_notes: e.target.value })
+                  }
+                  placeholder="Any extra information about this key"
+                  rows={3}
+                />
+              </div>
+
+              <ImageUpload
+                keyId={editingKey?.id || "temp"}
+                existingImages={formData.image_urls}
+                onImagesChange={(images) =>
+                  setFormData({ ...formData, image_urls: images })
+                }
+              />
+
+              <div className="flex gap-2">
+                <Button type="submit" disabled={isSubmitting} className="flex-1">
+                  {isSubmitting
+                    ? "Saving..."
+                    : editingKey
+                    ? "Update Key"
+                    : "Add Key"}
+                </Button>
+                {editingKey && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -190,7 +283,6 @@ const Admin = () => {
         <Card>
           <CardHeader>
             <CardTitle>Existing Keys ({keys.length})</CardTitle>
-            <CardDescription>Manage your key inventory</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -204,21 +296,22 @@ const Admin = () => {
                     key={key.id}
                     className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent/5 transition-colors"
                   >
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold">{key.key_number}</span>
                         <Badge variant={key.status === "available" ? "success" : "warning"}>
                           {key.status}
                         </Badge>
-                        {key.keyboard_shortcut && (
-                          <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">
-                            {key.keyboard_shortcut}
-                          </kbd>
-                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">{key.description}</p>
+                      {key.location && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span>{key.location}</span>
+                        </div>
+                      )}
                       {key.keywords && key.keywords.length > 0 && (
-                        <div className="flex flex-wrap gap-1 pt-1">
+                        <div className="flex flex-wrap gap-1">
                           {key.keywords.map((keyword, idx) => (
                             <Badge key={idx} variant="secondary" className="text-xs">
                               {keyword}
@@ -226,14 +319,33 @@ const Admin = () => {
                           ))}
                         </div>
                       )}
+                      {key.additional_notes && (
+                        <p className="text-sm text-muted-foreground italic">
+                          {key.additional_notes}
+                        </p>
+                      )}
+                      {key.image_urls && key.image_urls.length > 0 && (
+                        <div className="pt-2">
+                          <ImageGallery images={key.image_urls} />
+                        </div>
+                      )}
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(key.id, key.key_number)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(key)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(key.id, key.key_number)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))
               )}

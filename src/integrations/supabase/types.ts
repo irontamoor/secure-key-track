@@ -51,32 +51,38 @@ export type Database = {
       }
       keys: {
         Row: {
+          additional_notes: string | null
           created_at: string
           description: string
           id: string
+          image_urls: string[] | null
           key_number: string
-          keyboard_shortcut: string | null
           keywords: string[] | null
+          location: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          additional_notes?: string | null
           created_at?: string
           description: string
           id?: string
+          image_urls?: string[] | null
           key_number: string
-          keyboard_shortcut?: string | null
           keywords?: string[] | null
+          location?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          additional_notes?: string | null
           created_at?: string
           description?: string
           id?: string
+          image_urls?: string[] | null
           key_number?: string
-          keyboard_shortcut?: string | null
           keywords?: string[] | null
+          location?: string | null
           status?: string
           updated_at?: string
         }
