@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Upload, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB, ALLOWED_IMAGE_MIME_TYPES, ALLOWED_IMAGE_TYPES } from "@/lib/constants";
 
 interface ImageUploadProps {
   keyId: string;
@@ -12,7 +13,6 @@ interface ImageUploadProps {
 
 export const ImageUpload = ({ keyId, existingImages, onImagesChange }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  const [images, setImages] = useState<string[]>(existingImages);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -22,22 +22,13 @@ export const ImageUpload = ({ keyId, existingImages, onImagesChange }: ImageUplo
     const newImageUrls: string[] = [];
 
     for (const file of Array.from(files)) {
-      // Validate file
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: `${file.name} exceeds 5MB limit`,
-          variant: "destructive",
-        });
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        toast.error(`${file.name} exceeds ${MAX_FILE_SIZE_MB}MB limit`);
         continue;
       }
 
-      if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
-        toast({
-          title: "Invalid file type",
-          description: `${file.name} is not a supported image format`,
-          variant: "destructive",
-        });
+      if (!file.type.match(ALLOWED_IMAGE_MIME_TYPES)) {
+        toast.error(`${file.name} is not a supported image format`);
         continue;
       }
 
@@ -58,43 +49,29 @@ export const ImageUpload = ({ keyId, existingImages, onImagesChange }: ImageUplo
         newImageUrls.push(publicUrl);
       } catch (error) {
         console.error('Error uploading image:', error);
-        toast({
-          title: "Upload failed",
-          description: `Failed to upload ${file.name}`,
-          variant: "destructive",
-        });
+        toast.error(`Failed to upload ${file.name}`);
       }
     }
 
-    const updatedImages = [...images, ...newImageUrls];
-    setImages(updatedImages);
+    const updatedImages = [...existingImages, ...newImageUrls];
     onImagesChange(updatedImages);
     setUploading(false);
   };
 
   const handleRemoveImage = async (imageUrl: string) => {
     try {
-      // Extract file path from URL
       const urlParts = imageUrl.split('/key-images/');
       if (urlParts.length === 2) {
         const filePath = urlParts[1];
         await supabase.storage.from('key-images').remove([filePath]);
       }
 
-      const updatedImages = images.filter(img => img !== imageUrl);
-      setImages(updatedImages);
+      const updatedImages = existingImages.filter(img => img !== imageUrl);
       onImagesChange(updatedImages);
-
-      toast({
-        title: "Image removed",
-        description: "Image has been deleted successfully",
-      });
+      toast.success("Image removed successfully");
     } catch (error) {
       console.error('Error removing image:', error);
-      toast({
-        title: "Failed to remove image",
-        variant: "destructive",
-      });
+      toast.error("Failed to remove image");
     }
   };
 
@@ -103,7 +80,7 @@ export const ImageUpload = ({ keyId, existingImages, onImagesChange }: ImageUplo
       <div>
         <label className="text-sm font-medium mb-2 block">Key Images</label>
         <div className="flex flex-wrap gap-3 mb-3">
-          {images.map((imageUrl, index) => (
+          {existingImages.map((imageUrl, index) => (
             <div key={index} className="relative group">
               <img
                 src={imageUrl}
@@ -127,7 +104,7 @@ export const ImageUpload = ({ keyId, existingImages, onImagesChange }: ImageUplo
             type="file"
             id="image-upload"
             multiple
-            accept="image/jpeg,image/jpg,image/png,image/webp"
+            accept={ALLOWED_IMAGE_TYPES.join(',')}
             onChange={handleFileSelect}
             className="hidden"
             disabled={uploading}
@@ -145,7 +122,7 @@ export const ImageUpload = ({ keyId, existingImages, onImagesChange }: ImageUplo
               {uploading ? "Uploading..." : "Click to upload images"}
             </span>
             <span className="text-xs text-muted-foreground">
-              JPG, PNG, WEBP (max 5MB each)
+              JPG, PNG, WEBP (max {MAX_FILE_SIZE_MB}MB each)
             </span>
           </label>
         </div>

@@ -6,20 +6,10 @@ import { Button } from "@/components/ui/button";
 import { BookingDialog } from "./BookingDialog";
 import { ImageGallery } from "./ImageGallery";
 import { InfoButton } from "./InfoButton";
-
-interface KeyData {
-  id: string;
-  key_number: string;
-  description: string;
-  keywords: string[];
-  status: string;
-  location?: string | null;
-  additional_notes?: string | null;
-  image_urls?: string[] | null;
-}
+import { Key as KeyType } from "@/types/key";
 
 interface KeyCardProps {
-  keyData: KeyData;
+  keyData: KeyType;
   onUpdate: () => void;
 }
 

@@ -4,17 +4,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { KeyCard } from "./KeyCard";
 import { toast } from "sonner";
-
-interface Key {
-  id: string;
-  key_number: string;
-  description: string;
-  keywords: string[];
-  status: string;
-  location?: string | null;
-  additional_notes?: string | null;
-  image_urls?: string[] | null;
-}
+import { Key } from "@/types/key";
 
 export const KeySearch = () => {
   const [searchQuery, setSearchQuery] = useState("");

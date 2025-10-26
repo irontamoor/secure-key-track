@@ -6,6 +6,7 @@ import { Clock, Key, User, Search, FileText, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { InfoButton } from "./InfoButton";
+import { BOOKING_LIMIT } from "@/lib/constants";
 
 interface Booking {
   id: string;
@@ -72,7 +73,7 @@ export const AuditLog = () => {
           )
         `)
         .order("timestamp", { ascending: false })
-        .limit(50);
+        .limit(BOOKING_LIMIT);
 
       if (error) throw error;
       setBookings(data || []);

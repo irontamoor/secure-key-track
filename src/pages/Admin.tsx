@@ -12,17 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImageGallery } from "@/components/ImageGallery";
 import { InfoButton } from "@/components/InfoButton";
-
-interface Key {
-  id: string;
-  key_number: string;
-  description: string;
-  keywords: string[];
-  status: string;
-  location?: string | null;
-  additional_notes?: string | null;
-  image_urls?: string[] | null;
-}
+import { Key } from "@/types/key";
 
 interface FormData {
   key_number: string;

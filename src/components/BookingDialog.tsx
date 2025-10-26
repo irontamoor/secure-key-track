@@ -3,14 +3,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface KeyData {
-  id: string;
-  key_number: string;
-  description: string;
-}
+import { KeyData } from "@/types/key";
+import { MAX_NOTES_LENGTH, SUGGESTION_LIMIT } from "@/lib/constants";
 
 interface BookingDialogProps {
   open: boolean;
@@ -50,7 +47,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
         .from("bookings")
         .select("user_name")
         .ilike("user_name", `%${userName}%`)
-        .limit(5);
+        .limit(SUGGESTION_LIMIT);
 
       if (error) throw error;
 
@@ -68,7 +65,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
         .select("given_to")
         .not("given_to", "is", null)
         .ilike("given_to", `%${givenTo}%`)
-        .limit(5);
+        .limit(SUGGESTION_LIMIT);
 
       if (error) throw error;
 
@@ -196,15 +193,14 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (optional)</Label>
-              <textarea
+              <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Purpose, expected return time, etc."
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                maxLength={500}
+                maxLength={MAX_NOTES_LENGTH}
               />
-              <p className="text-xs text-muted-foreground">{notes.length}/500 characters</p>
+              <p className="text-xs text-muted-foreground">{notes.length}/{MAX_NOTES_LENGTH} characters</p>
             </div>
           </div>
 
