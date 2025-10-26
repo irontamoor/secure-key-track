@@ -1,7 +1,8 @@
 import { KeySearch } from "@/components/KeySearch";
 import { AuditLog } from "@/components/AuditLog";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Settings, Search, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -22,9 +23,25 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <KeySearch />
-        <AuditLog />
+      <main className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="search" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="search">
+              <Search className="h-4 w-4 mr-2" />
+              Search Keys
+            </TabsTrigger>
+            <TabsTrigger value="activity">
+              <History className="h-4 w-4 mr-2" />
+              Recent Activity
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="search" className="mt-6">
+            <KeySearch />
+          </TabsContent>
+          <TabsContent value="activity" className="mt-6">
+            <AuditLog />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
