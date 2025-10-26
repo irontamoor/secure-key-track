@@ -14,6 +14,7 @@ import { ImageGallery } from "@/components/ImageGallery";
 import { InfoButton } from "@/components/InfoButton";
 import { z } from "zod";
 import type { Key } from "@/types/key";
+import { logKeyCreated, logKeyUpdated, logKeyDeleted } from "@/lib/activityLogger";
 
 const keySchema = z.object({
   key_number: z.string().trim().min(1, "Key number is required").max(50, "Key number too long"),
@@ -21,6 +22,7 @@ const keySchema = z.object({
   location: z.string().trim().max(200, "Location too long").optional(),
   keywords: z.string().trim().max(500, "Keywords too long").optional(),
   additional_notes: z.string().trim().max(1000, "Notes too long").optional(),
+  admin_name: z.string().trim().min(1, "Your name is required for logging").max(100, "Name too long"),
 });
 
 interface FormData {
@@ -30,6 +32,7 @@ interface FormData {
   location: string;
   additional_notes: string;
   image_urls: string[];
+  admin_name: string;
 }
 
 const Admin = () => {
@@ -43,6 +46,7 @@ const Admin = () => {
     location: "",
     additional_notes: "",
     image_urls: [],
+    admin_name: localStorage.getItem("admin_name") || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -74,9 +78,13 @@ const Admin = () => {
         location: formData.location,
         keywords: formData.keywords,
         additional_notes: formData.additional_notes,
+        admin_name: formData.admin_name,
       });
 
       setIsSubmitting(true);
+
+      // Save admin name to localStorage for convenience
+      localStorage.setItem("admin_name", validatedData.admin_name);
 
       const keywordsArray = validatedData.keywords
         ? validatedData.keywords.split(",").map((k) => k.trim()).filter(Boolean)
@@ -92,16 +100,33 @@ const Admin = () => {
       };
 
       if (editingKey) {
+        // Fetch current key data before updating for logging
+        const { data: oldKeyData } = await supabase
+          .from("keys")
+          .select("*")
+          .eq("id", editingKey.id)
+          .single();
+
         const { error } = await supabase
           .from("keys")
           .update(keyData)
           .eq("id", editingKey.id);
 
         if (error) throw error;
+
+        // Log the update
+        if (oldKeyData) {
+          await logKeyUpdated(editingKey.id, oldKeyData, keyData, validatedData.admin_name);
+        }
+
         toast.success("Key updated successfully");
         setEditingKey(null);
       } else {
-        const { error } = await supabase.from("keys").insert([keyData]);
+        const { data: newKey, error } = await supabase
+          .from("keys")
+          .insert([keyData])
+          .select()
+          .single();
 
         if (error) {
           if (error.code === "23505") {
@@ -111,6 +136,12 @@ const Admin = () => {
           }
           throw error;
         }
+
+        // Log the creation
+        if (newKey) {
+          await logKeyCreated(newKey.id, keyData, validatedData.admin_name);
+        }
+
         toast.success("Key added successfully");
       }
 
@@ -121,6 +152,7 @@ const Admin = () => {
         location: "",
         additional_notes: "",
         image_urls: [],
+        admin_name: localStorage.getItem("admin_name") || "", // Keep admin name from localStorage
       });
       fetchKeys();
     } catch (error) {
@@ -135,13 +167,33 @@ const Admin = () => {
   };
 
   const handleDelete = async (id: string, keyNumber: string) => {
+    const adminName = formData.admin_name || prompt("Enter your name for the audit log:");
+    
+    if (!adminName) {
+      toast.error("Admin name is required for logging");
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete key ${keyNumber}?`)) {
       return;
     }
 
     try {
+      // Fetch key data before deletion for logging
+      const { data: keyToDelete } = await supabase
+        .from("keys")
+        .select("*")
+        .eq("id", id)
+        .single();
+
       const { error } = await supabase.from("keys").delete().eq("id", id);
       if (error) throw error;
+
+      // Log the deletion
+      if (keyToDelete) {
+        await logKeyDeleted(id, keyToDelete, adminName);
+      }
+
       toast.success("Key deleted successfully");
       fetchKeys();
     } catch (error) {
@@ -158,6 +210,7 @@ const Admin = () => {
       location: key.location || "",
       additional_notes: key.additional_notes || "",
       image_urls: key.image_urls || [],
+      admin_name: localStorage.getItem("admin_name") || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -171,6 +224,7 @@ const Admin = () => {
       location: "",
       additional_notes: "",
       image_urls: [],
+      admin_name: localStorage.getItem("admin_name") || "",
     });
   };
 
@@ -201,6 +255,20 @@ const Admin = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="admin_name">Your Name *</Label>
+                  <Input
+                    id="admin_name"
+                    value={formData.admin_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, admin_name: e.target.value })
+                    }
+                    placeholder="e.g., John Smith"
+                    required
+                    maxLength={100}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="key_number">Key Number *</Label>
                   <Input
                     id="key_number"
@@ -213,19 +281,19 @@ const Admin = () => {
                     maxLength={50}
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    placeholder="e.g., Main Office, Storage Room B"
-                    maxLength={200}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
+                  placeholder="e.g., Main Office, Storage Room B"
+                  maxLength={200}
+                />
               </div>
 
               <div className="space-y-2">

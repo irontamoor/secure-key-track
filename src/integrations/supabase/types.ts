@@ -17,28 +17,37 @@ export type Database = {
       bookings: {
         Row: {
           action: string
+          changed_fields: Json | null
           given_to: string | null
           id: string
           key_id: string
+          new_values: Json | null
           notes: string | null
+          old_values: Json | null
           timestamp: string
           user_name: string
         }
         Insert: {
           action: string
+          changed_fields?: Json | null
           given_to?: string | null
           id?: string
           key_id: string
+          new_values?: Json | null
           notes?: string | null
+          old_values?: Json | null
           timestamp?: string
           user_name: string
         }
         Update: {
           action?: string
+          changed_fields?: Json | null
           given_to?: string | null
           id?: string
           key_id?: string
+          new_values?: Json | null
           notes?: string | null
+          old_values?: Json | null
           timestamp?: string
           user_name?: string
         }
