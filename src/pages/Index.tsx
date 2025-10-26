@@ -34,19 +34,22 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex justify-center">
             <TabsList className="grid grid-cols-3 w-full max-w-2xl h-12">
-              <TabsTrigger value="search" className="gap-2">
+              <TabsTrigger value="search" className="gap-1.5">
                 <Search className="h-4 w-4" />
                 <span className="hidden sm:inline">Search Keys</span>
                 <span className="sm:hidden">Search</span>
+                <InfoButton content="Search and check out/in keys by number, description, or keywords. View key details including photos and location." />
               </TabsTrigger>
-              <TabsTrigger value="activity" className="gap-2">
+              <TabsTrigger value="activity" className="gap-1.5">
                 <History className="h-4 w-4" />
                 <span className="hidden sm:inline">Recent Activity</span>
                 <span className="sm:hidden">Activity</span>
+                <InfoButton content="View complete audit trail of all key transactions. Filter by person names, key numbers, or notes." />
               </TabsTrigger>
-              <TabsTrigger value="admin" className="gap-2">
+              <TabsTrigger value="admin" className="gap-1.5">
                 <Settings className="h-4 w-4" />
                 Admin
+                <InfoButton content="Add new keys, edit existing ones, upload photos, and manage the entire key inventory." />
               </TabsTrigger>
             </TabsList>
           </div>
