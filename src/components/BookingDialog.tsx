@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -133,8 +132,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
           </DialogHeader>
 
           <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="userName">Your Name</Label>
+            <div>
               <Input
                 id="userName"
                 value={userName}
@@ -163,10 +161,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="givenTo">
-                {action === "check_out" ? "Given To (recipient)" : "Returned By"}
-              </Label>
+            <div>
               <Input
                 id="givenTo"
                 value={givenTo}
@@ -194,8 +189,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (optional)</Label>
+            <div>
               <textarea
                 id="notes"
                 value={notes}
