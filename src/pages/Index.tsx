@@ -1,10 +1,8 @@
 import { KeySearch } from "@/components/KeySearch";
 import { AuditLog } from "@/components/AuditLog";
-import { HelpDialog } from "@/components/HelpDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Settings, Search, History, BookOpen, FileText, Printer } from "lucide-react";
+import { Settings, Search, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -19,28 +17,6 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Track and manage your keys efficiently</p>
           </div>
           <div className="flex items-center gap-2">
-            <HelpDialog />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Docs
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate("/docs")}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Full Documentation
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  navigate("/docs");
-                  setTimeout(() => window.print(), 500);
-                }}>
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print Quick Reference
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button variant="outline" onClick={() => navigate("/admin")}>
               <Settings className="h-4 w-4 mr-2" />
               Admin
