@@ -12,8 +12,8 @@ const Index = () => {
   return (
     <Tabs defaultValue="search" className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm" style={{ background: 'var(--gradient-card)' }}>
-        <div className="container mx-auto px-4 py-6">
-          <div className="grid grid-cols-3 items-center gap-4">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Left: Title */}
             <div className="flex items-center gap-2">
               <div>
@@ -24,23 +24,21 @@ const Index = () => {
             </div>
 
             {/* Center: Tabs */}
-            <div className="flex justify-center">
-              <TabsList className="grid grid-cols-2 h-11">
+            <div className="flex justify-center md:absolute md:left-1/2 md:transform md:-translate-x-1/2">
+              <TabsList className="grid grid-cols-2 w-fit h-11">
                 <TabsTrigger value="search" className="gap-2">
                   <Search className="h-4 w-4" />
                   Search Keys
-                  <InfoButton content="Search for keys by number, description, or keywords. Click on a key to check it out or in." />
                 </TabsTrigger>
                 <TabsTrigger value="activity" className="gap-2">
                   <History className="h-4 w-4" />
                   Recent Activity
-                  <InfoButton content="View all check-in and check-out transactions. Search by person, key, or notes." />
                 </TabsTrigger>
               </TabsList>
             </div>
 
             {/* Right: Admin Button */}
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end">
               <Button variant="outline" onClick={() => navigate("/admin")} className="hover-scale">
                 <Settings className="h-4 w-4 mr-2" />
                 Admin
