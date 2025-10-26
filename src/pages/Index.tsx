@@ -1,12 +1,31 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { KeySearch } from "@/components/KeySearch";
+import { AuditLog } from "@/components/AuditLog";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Key Management System</h1>
+            <p className="text-sm text-muted-foreground">Track and manage your keys efficiently</p>
+          </div>
+          <Button variant="outline" onClick={() => navigate("/admin")}>
+            <Settings className="h-4 w-4 mr-2" />
+            Admin
+          </Button>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        <KeySearch />
+        <AuditLog />
+      </main>
     </div>
   );
 };
