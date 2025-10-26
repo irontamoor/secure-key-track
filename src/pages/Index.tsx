@@ -1,5 +1,6 @@
 import { KeySearch } from "@/components/KeySearch";
 import { AuditLog } from "@/components/AuditLog";
+import { HelpDialog } from "@/components/HelpDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Search, History } from "lucide-react";
@@ -16,10 +17,13 @@ const Index = () => {
             <h1 className="text-2xl font-bold text-foreground">Key Management System</h1>
             <p className="text-sm text-muted-foreground">Track and manage your keys efficiently</p>
           </div>
-          <Button variant="outline" onClick={() => navigate("/admin")}>
-            <Settings className="h-4 w-4 mr-2" />
-            Admin
-          </Button>
+          <div className="flex items-center gap-2">
+            <HelpDialog />
+            <Button variant="outline" onClick={() => navigate("/admin")}>
+              <Settings className="h-4 w-4 mr-2" />
+              Admin
+            </Button>
+          </div>
         </div>
       </header>
 
