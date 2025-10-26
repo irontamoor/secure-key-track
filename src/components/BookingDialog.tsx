@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { KeyData } from "@/types/key";
+import { z } from "zod";
+import type { KeyData } from "@/types/key";
 import { MAX_NOTES_LENGTH, SUGGESTION_LIMIT } from "@/lib/constants";
+
+const bookingSchema = z.object({
+  userName: z.string().trim().min(1, "Name is required").max(100, "Name too long"),
+  givenTo: z.string().trim().max(100, "Name too long").optional(),
+  notes: z.string().trim().max(MAX_NOTES_LENGTH, `Notes too long (max ${MAX_NOTES_LENGTH} chars)`).optional(),
+});
 
 interface BookingDialogProps {
   open: boolean;
@@ -54,7 +61,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
       const uniqueNames = [...new Set(data?.map((b) => b.user_name) || [])];
       setUserNameSuggestions(uniqueNames);
     } catch (error) {
-      console.error("Error fetching user name suggestions:", error);
+      // Silently fail - suggestions are not critical
     }
   };
 
@@ -72,26 +79,27 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
       const uniqueNames = [...new Set(data?.map((b) => b.given_to).filter(Boolean) || [])];
       setGivenToSuggestions(uniqueNames);
     } catch (error) {
-      console.error("Error fetching given to suggestions:", error);
+      // Silently fail - suggestions are not critical
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!userName.trim()) {
-      toast.error("Please enter your name");
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
+      const validatedData = bookingSchema.parse({
+        userName,
+        givenTo: givenTo || undefined,
+        notes: notes || undefined,
+      });
+
+      setIsSubmitting(true);
+
       const { error } = await supabase.from("bookings").insert({
         key_id: keyData.id,
-        user_name: userName.trim(),
-        given_to: givenTo.trim() || null,
-        notes: notes.trim() || null,
+        user_name: validatedData.userName,
+        given_to: validatedData.givenTo || null,
+        notes: validatedData.notes || null,
         action: action,
       });
 
@@ -109,8 +117,11 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      toast.error("Failed to complete booking");
-      console.error("Error creating booking:", error);
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error("Failed to complete booking");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -139,6 +150,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
                 placeholder="Enter your name"
                 autoComplete="off"
                 required
+                maxLength={100}
               />
               
               {userNameSuggestions.length > 0 && (
@@ -170,6 +182,7 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
                 onChange={(e) => setGivenTo(e.target.value)}
                 placeholder={action === "check_out" ? "Who is receiving the key?" : "Who is returning the key?"}
                 autoComplete="off"
+                maxLength={100}
               />
               
               {givenToSuggestions.length > 0 && (

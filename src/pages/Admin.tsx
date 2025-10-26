@@ -1,18 +1,28 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Edit, MapPin, Home } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+import { Trash2, Edit, MapPin, Home, LogOut } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImageGallery } from "@/components/ImageGallery";
 import { InfoButton } from "@/components/InfoButton";
-import { Key } from "@/types/key";
+import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
+import type { Key } from "@/types/key";
+
+const keySchema = z.object({
+  key_number: z.string().trim().min(1, "Key number is required").max(50, "Key number too long"),
+  description: z.string().trim().min(1, "Description is required").max(500, "Description too long"),
+  location: z.string().trim().max(200, "Location too long").optional(),
+  keywords: z.string().trim().max(500, "Keywords too long").optional(),
+  additional_notes: z.string().trim().max(1000, "Notes too long").optional(),
+});
 
 interface FormData {
   key_number: string;
@@ -25,6 +35,7 @@ interface FormData {
 
 const Admin = () => {
   const navigate = useNavigate();
+  const { user, isAdmin, loading, signOut } = useAuth();
   const [keys, setKeys] = useState<Key[]>([]);
   const [editingKey, setEditingKey] = useState<Key | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -38,8 +49,19 @@ const Admin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchKeys();
-  }, []);
+    if (!loading && !user) {
+      navigate("/auth");
+    } else if (!loading && user && !isAdmin) {
+      toast.error("Access denied. Admin privileges required.");
+      navigate("/");
+    }
+  }, [user, isAdmin, loading, navigate]);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchKeys();
+    }
+  }, [user, isAdmin]);
 
   const fetchKeys = async () => {
     try {
@@ -52,26 +74,33 @@ const Admin = () => {
       setKeys(data || []);
     } catch (error) {
       toast.error("Failed to load keys");
-      console.error("Error fetching keys:", error);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
+    
     try {
-      const keywordsArray = formData.keywords
-        .split(",")
-        .map((k) => k.trim())
-        .filter((k) => k.length > 0);
-
-      const keyData = {
+      const validatedData = keySchema.parse({
         key_number: formData.key_number,
         description: formData.description,
+        location: formData.location,
+        keywords: formData.keywords,
+        additional_notes: formData.additional_notes,
+      });
+
+      setIsSubmitting(true);
+
+      const keywordsArray = validatedData.keywords
+        ? validatedData.keywords.split(",").map((k) => k.trim()).filter(Boolean)
+        : [];
+
+      const keyData = {
+        key_number: validatedData.key_number,
+        description: validatedData.description,
         keywords: keywordsArray,
-        location: formData.location || null,
-        additional_notes: formData.additional_notes || null,
+        location: validatedData.location || null,
+        additional_notes: validatedData.additional_notes || null,
         image_urls: formData.image_urls,
       };
 
@@ -107,9 +136,12 @@ const Admin = () => {
         image_urls: [],
       });
       fetchKeys();
-    } catch (error: any) {
-      toast.error(editingKey ? "Failed to update key" : "Failed to add key");
-      console.error("Error saving key:", error);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      } else {
+        toast.error(editingKey ? "Failed to update key" : "Failed to add key");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -127,7 +159,6 @@ const Admin = () => {
       fetchKeys();
     } catch (error) {
       toast.error("Failed to delete key");
-      console.error("Error deleting key:", error);
     }
   };
 
@@ -156,6 +187,23 @@ const Admin = () => {
     });
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
@@ -170,6 +218,10 @@ const Admin = () => {
             <Button variant="outline" onClick={() => navigate("/")} className="hover-scale">
               <Home className="h-4 w-4 mr-2" />
               Back to Keys
+            </Button>
+            <Button variant="ghost" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
             </Button>
           </div>
         </div>
@@ -194,6 +246,7 @@ const Admin = () => {
                     }
                     placeholder="e.g., K001"
                     required
+                    maxLength={50}
                   />
                 </div>
 
@@ -206,6 +259,7 @@ const Admin = () => {
                       setFormData({ ...formData, location: e.target.value })
                     }
                     placeholder="e.g., Main Office, Storage Room B"
+                    maxLength={200}
                   />
                 </div>
               </div>
@@ -220,6 +274,7 @@ const Admin = () => {
                   }
                   placeholder="Describe what this key is for"
                   required
+                  maxLength={500}
                 />
               </div>
 
@@ -232,6 +287,7 @@ const Admin = () => {
                     setFormData({ ...formData, keywords: e.target.value })
                   }
                   placeholder="e.g., office, main door, entrance"
+                  maxLength={500}
                 />
               </div>
 
@@ -245,6 +301,7 @@ const Admin = () => {
                   }
                   placeholder="Any extra information about this key"
                   rows={3}
+                  maxLength={1000}
                 />
               </div>
 
