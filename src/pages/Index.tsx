@@ -1,49 +1,54 @@
 import { KeySearch } from "@/components/KeySearch";
 import { AuditLog } from "@/components/AuditLog";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Search, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { InfoButton } from "@/components/InfoButton";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("search");
+
+  useEffect(() => {
+    if (activeTab === "admin") {
+      navigate("/admin");
+    }
+  }, [activeTab, navigate]);
 
   return (
-    <Tabs defaultValue="search" className="min-h-screen bg-background">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-screen bg-background">
       <header className="border-b bg-card shadow-sm" style={{ background: 'var(--gradient-card)' }}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* Left: Title */}
-            <div className="flex items-center gap-2">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Key Management System</h1>
-                <p className="text-sm text-muted-foreground">Track and manage your keys efficiently</p>
-              </div>
-              <InfoButton content="This system helps you track key checkouts and returns. All actions are logged automatically for audit purposes." />
+        {/* Title Row */}
+        <div className="container mx-auto px-4 py-4 border-b border-border/50">
+          <div className="flex items-center gap-2">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Key Management System</h1>
+              <p className="text-sm text-muted-foreground">Track and manage your keys efficiently</p>
             </div>
+            <InfoButton content="This system helps you track key checkouts and returns. All actions are logged automatically for audit purposes." />
+          </div>
+        </div>
 
-            {/* Center: Tabs */}
-            <div className="flex justify-center md:absolute md:left-1/2 md:transform md:-translate-x-1/2">
-              <TabsList className="grid grid-cols-2 w-fit h-11">
-                <TabsTrigger value="search" className="gap-2">
-                  <Search className="h-4 w-4" />
-                  Search Keys
-                </TabsTrigger>
-                <TabsTrigger value="activity" className="gap-2">
-                  <History className="h-4 w-4" />
-                  Recent Activity
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            {/* Right: Admin Button */}
-            <div className="flex items-center justify-end">
-              <Button variant="outline" onClick={() => navigate("/admin")} className="hover-scale">
-                <Settings className="h-4 w-4 mr-2" />
+        {/* Navigation Menu Row */}
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center">
+            <TabsList className="grid grid-cols-3 w-full max-w-2xl h-12">
+              <TabsTrigger value="search" className="gap-2">
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Search Keys</span>
+                <span className="sm:hidden">Search</span>
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="gap-2">
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">Recent Activity</span>
+                <span className="sm:hidden">Activity</span>
+              </TabsTrigger>
+              <TabsTrigger value="admin" className="gap-2">
+                <Settings className="h-4 w-4" />
                 Admin
-              </Button>
-            </div>
+              </TabsTrigger>
+            </TabsList>
           </div>
         </div>
       </header>
