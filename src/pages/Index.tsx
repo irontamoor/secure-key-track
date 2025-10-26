@@ -3,44 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { KeySearch } from "@/components/KeySearch";
 import { AuditLog } from "@/components/AuditLog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Settings, Search, History, LogOut } from "lucide-react";
+import { Settings, Search, History } from "lucide-react";
 import { InfoButton } from "@/components/InfoButton";
-import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("search");
-  const { user, isAdmin, loading, signOut } = useAuth();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (activeTab === "admin") {
       navigate("/admin");
     }
   }, [activeTab, navigate]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-screen bg-background">
@@ -55,10 +29,6 @@ const Index = () => {
               </div>
               <InfoButton content="This system helps you track key checkouts and returns. All actions are logged automatically for audit purposes." />
             </div>
-            <Button variant="ghost" onClick={handleSignOut} size="sm">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
           </div>
         </div>
 
@@ -78,13 +48,11 @@ const Index = () => {
                 <span className="sm:hidden">Activity</span>
                 <InfoButton content="View complete audit trail of all key transactions. Filter by person names, key numbers, or notes." />
               </TabsTrigger>
-              {isAdmin && (
-                <TabsTrigger value="admin" className="gap-1.5">
-                  <Settings className="h-4 w-4" />
-                  Admin
-                  <InfoButton content="Add new keys, edit existing ones, upload photos, and manage the entire key inventory." />
-                </TabsTrigger>
-              )}
+              <TabsTrigger value="admin" className="gap-1.5">
+                <Settings className="h-4 w-4" />
+                Admin
+                <InfoButton content="Add new keys, edit existing ones, upload photos, and manage the entire key inventory." />
+              </TabsTrigger>
             </TabsList>
           </div>
         </div>

@@ -8,11 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, Edit, MapPin, Home, LogOut } from "lucide-react";
+import { Trash2, Edit, MapPin, Home } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImageGallery } from "@/components/ImageGallery";
 import { InfoButton } from "@/components/InfoButton";
-import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 import type { Key } from "@/types/key";
 
@@ -35,7 +34,6 @@ interface FormData {
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, loading, signOut } = useAuth();
   const [keys, setKeys] = useState<Key[]>([]);
   const [editingKey, setEditingKey] = useState<Key | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -49,19 +47,8 @@ const Admin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    } else if (!loading && user && !isAdmin) {
-      toast.error("Access denied. Admin privileges required.");
-      navigate("/");
-    }
-  }, [user, isAdmin, loading, navigate]);
-
-  useEffect(() => {
-    if (user && isAdmin) {
-      fetchKeys();
-    }
-  }, [user, isAdmin]);
+    fetchKeys();
+  }, []);
 
   const fetchKeys = async () => {
     try {
@@ -187,23 +174,6 @@ const Admin = () => {
     });
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!user || !isAdmin) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
@@ -214,16 +184,10 @@ const Admin = () => {
               <p className="text-muted-foreground mt-1">Add, edit, and manage keys</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate("/")} className="hover-scale">
-              <Home className="h-4 w-4 mr-2" />
-              Back to Keys
-            </Button>
-            <Button variant="ghost" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
+          <Button variant="outline" onClick={() => navigate("/")} className="hover-scale">
+            <Home className="h-4 w-4 mr-2" />
+            Back to Keys
+          </Button>
         </div>
 
         <Card className="hover:shadow-lg transition-shadow">
