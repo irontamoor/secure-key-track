@@ -17,6 +17,7 @@ export type Database = {
       bookings: {
         Row: {
           action: string
+          given_to: string | null
           id: string
           key_id: string
           notes: string | null
@@ -25,6 +26,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          given_to?: string | null
           id?: string
           key_id: string
           notes?: string | null
@@ -33,6 +35,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          given_to?: string | null
           id?: string
           key_id?: string
           notes?: string | null

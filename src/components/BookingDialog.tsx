@@ -22,18 +22,29 @@ interface BookingDialogProps {
 
 export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }: BookingDialogProps) => {
   const [userName, setUserName] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [givenTo, setGivenTo] = useState("");
+  const [notes, setNotes] = useState("");
+  const [userNameSuggestions, setUserNameSuggestions] = useState<string[]>([]);
+  const [givenToSuggestions, setGivenToSuggestions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open && userName.length > 1) {
-      fetchSuggestions();
+      fetchUserNameSuggestions();
     } else {
-      setSuggestions([]);
+      setUserNameSuggestions([]);
     }
   }, [userName, open]);
 
-  const fetchSuggestions = async () => {
+  useEffect(() => {
+    if (open && givenTo.length > 1) {
+      fetchGivenToSuggestions();
+    } else {
+      setGivenToSuggestions([]);
+    }
+  }, [givenTo, open]);
+
+  const fetchUserNameSuggestions = async () => {
     try {
       const { data, error } = await supabase
         .from("bookings")
@@ -44,9 +55,27 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
       if (error) throw error;
 
       const uniqueNames = [...new Set(data?.map((b) => b.user_name) || [])];
-      setSuggestions(uniqueNames);
+      setUserNameSuggestions(uniqueNames);
     } catch (error) {
-      console.error("Error fetching suggestions:", error);
+      console.error("Error fetching user name suggestions:", error);
+    }
+  };
+
+  const fetchGivenToSuggestions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("given_to")
+        .not("given_to", "is", null)
+        .ilike("given_to", `%${givenTo}%`)
+        .limit(5);
+
+      if (error) throw error;
+
+      const uniqueNames = [...new Set(data?.map((b) => b.given_to).filter(Boolean) || [])];
+      setGivenToSuggestions(uniqueNames);
+    } catch (error) {
+      console.error("Error fetching given to suggestions:", error);
     }
   };
 
@@ -64,6 +93,8 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
       const { error } = await supabase.from("bookings").insert({
         key_id: keyData.id,
         user_name: userName.trim(),
+        given_to: givenTo.trim() || null,
+        notes: notes.trim() || null,
         action: action,
       });
 
@@ -76,6 +107,8 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
       );
 
       setUserName("");
+      setGivenTo("");
+      setNotes("");
       onOpenChange(false);
       onSuccess();
     } catch (error) {
@@ -111,15 +144,15 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
                 required
               />
               
-              {suggestions.length > 0 && (
+              {userNameSuggestions.length > 0 && (
                 <div className="border rounded-md bg-popover">
-                  {suggestions.map((name, idx) => (
+                  {userNameSuggestions.map((name, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => {
                         setUserName(name);
-                        setSuggestions([]);
+                        setUserNameSuggestions([]);
                       }}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
                     >
@@ -128,6 +161,50 @@ export const BookingDialog = ({ open, onOpenChange, keyData, action, onSuccess }
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="givenTo">
+                {action === "check_out" ? "Given To (recipient)" : "Returned By"}
+              </Label>
+              <Input
+                id="givenTo"
+                value={givenTo}
+                onChange={(e) => setGivenTo(e.target.value)}
+                placeholder={action === "check_out" ? "Who is receiving the key?" : "Who is returning the key?"}
+                autoComplete="off"
+              />
+              
+              {givenToSuggestions.length > 0 && (
+                <div className="border rounded-md bg-popover">
+                  {givenToSuggestions.map((name, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setGivenTo(name);
+                        setGivenToSuggestions([]);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Purpose, expected return time, etc."
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground">{notes.length}/500 characters</p>
             </div>
           </div>
 
