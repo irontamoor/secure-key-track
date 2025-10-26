@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
-import type { KeyData } from "@/types/key";
+import type { Key } from "@/types/key";
 import { MAX_NOTES_LENGTH, SUGGESTION_LIMIT } from "@/lib/constants";
 
 const bookingSchema = z.object({
@@ -19,7 +19,7 @@ const bookingSchema = z.object({
 interface BookingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  keyData: KeyData;
+  keyData: Pick<Key, 'id' | 'key_number' | 'description'>;
   action: "check_out" | "check_in";
   onSuccess: () => void;
 }
