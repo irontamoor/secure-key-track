@@ -12,6 +12,7 @@ import { Trash2, Edit, MapPin, Home } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ImageGallery } from "@/components/ImageGallery";
 import { InfoButton } from "@/components/InfoButton";
+import { DeletePasswordDialog } from "@/components/DeletePasswordDialog";
 import { z } from "zod";
 import type { Key } from "@/types/key";
 import { logKeyCreated, logKeyUpdated, logKeyDeleted } from "@/lib/activityLogger";
@@ -49,6 +50,8 @@ const Admin = () => {
     admin_name: localStorage.getItem("admin_name") || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [keyToDelete, setKeyToDelete] = useState<{id: string, keyNumber: string} | null>(null);
 
   useEffect(() => {
     fetchKeys();
@@ -166,7 +169,14 @@ const Admin = () => {
     }
   };
 
-  const handleDelete = async (id: string, keyNumber: string) => {
+  const handleDelete = (id: string, keyNumber: string) => {
+    setKeyToDelete({ id, keyNumber });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!keyToDelete) return;
+
     const adminName = formData.admin_name || prompt("Enter your name for the audit log:");
     
     if (!adminName) {
@@ -174,24 +184,20 @@ const Admin = () => {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete key ${keyNumber}?`)) {
-      return;
-    }
-
     try {
       // Fetch key data before deletion for logging
-      const { data: keyToDelete } = await supabase
+      const { data: keyData } = await supabase
         .from("keys")
         .select("*")
-        .eq("id", id)
+        .eq("id", keyToDelete.id)
         .single();
 
-      const { error } = await supabase.from("keys").delete().eq("id", id);
+      const { error } = await supabase.from("keys").delete().eq("id", keyToDelete.id);
       if (error) throw error;
 
       // Log the deletion
-      if (keyToDelete) {
-        await logKeyDeleted(id, keyToDelete, adminName);
+      if (keyData) {
+        await logKeyDeleted(keyToDelete.id, keyData, adminName);
       }
 
       toast.success("Key deleted successfully");
@@ -452,6 +458,13 @@ const Admin = () => {
           </CardContent>
         </Card>
       </div>
+
+      <DeletePasswordDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        keyNumber={keyToDelete?.keyNumber || ""}
+      />
     </div>
   );
 };
